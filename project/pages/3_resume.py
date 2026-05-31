@@ -43,7 +43,7 @@ if uploaded is not None:
                         user_id=st.session_state.user_id,
                         filename=uploaded.name,
                         file_bytes=uploaded.getvalue(),
-                        model=st.session_state.get("ollama_model"),
+                        model=st.session_state.get("groq_model"),
                     )
                 if success and resume:
                     st.success(message)

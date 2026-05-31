@@ -12,7 +12,7 @@ from database import crud
 from models.interview import InterviewQuestion, InterviewSession
 from prompts.interview_prompts import initial_question_prompt
 from services.evaluation_service import EvaluationService, evaluation_service
-from services.ollama_service import OllamaService, ollama_service
+from services.llm_service import LLMService, llm_service
 from services.resume_service import ResumeService, resume_service
 from utils.helpers import adjust_difficulty, parse_json_from_llm, resume_context_summary
 
@@ -34,7 +34,7 @@ class InterviewService:
 
     def __init__(
         self,
-        llm: Optional[OllamaService] = None,
+        llm: Optional[LLMService] = None,
         evaluator: Optional[EvaluationService] = None,
         resume_svc: Optional[ResumeService] = None,
     ) -> None:
@@ -46,7 +46,7 @@ class InterviewService:
             evaluator: Answer evaluation service.
             resume_svc: Resume context provider.
         """
-        self.llm = llm or ollama_service
+        self.llm = llm or llm_service
         self.evaluator = evaluator or evaluation_service
         self.resume_svc = resume_svc or resume_service
 

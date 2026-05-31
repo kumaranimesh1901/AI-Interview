@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from database import crud
 from models.resume import Resume
 from prompts.resume_prompts import resume_extraction_prompt
-from services.ollama_service import OllamaService, ollama_service
+from services.llm_service import LLMService, llm_service
 from utils.helpers import parse_json_from_llm
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 class ResumeService:
     """Handles PDF upload, text extraction, and structured parsing."""
 
-    def __init__(self, llm: Optional[OllamaService] = None) -> None:
+    def __init__(self, llm: Optional[LLMService] = None) -> None:
         """Initialize with optional custom LLM client."""
-        self.llm = llm or ollama_service
+        self.llm = llm or llm_service
 
     @staticmethod
     def extract_text_from_pdf(file_bytes: bytes) -> Tuple[bool, str, str]:

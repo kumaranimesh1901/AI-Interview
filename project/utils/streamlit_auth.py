@@ -12,12 +12,12 @@ from config.settings import settings
 from database.db import get_session_factory, init_db
 from models.user import User
 from services.auth_service import auth_service
-from services.ollama_service import ollama_service
+from services.llm_service import llm_service
 
 logger = logging.getLogger(__name__)
 
-# Cache duration for Ollama health checks (seconds)
-_HEALTH_CHECK_CACHE_TTL: int = 30
+# Cache duration for health checks (seconds)
+_HEALTH_CHECK_CACHE_TTL: int = 60
 
 
 def init_app_state() -> None:
@@ -37,7 +37,7 @@ def init_app_state() -> None:
             "user_id": None,
             "username": None,
             "email": None,
-            "ollama_model": settings.OLLAMA_DEFAULT_MODEL,
+            "groq_model": settings.GROQ_MODEL,
             "interview_session_id": None,
             "current_question_id": None,
             "current_question_number": 0,
@@ -115,24 +115,24 @@ def require_login() -> bool:
 
 def _cached_health_check() -> bool:
     """
-    Check Ollama health with a TTL cache to avoid hammering the server.
+    Check Groq API health with a TTL cache to avoid hammering the server.
 
     Returns:
-        True if Ollama is reachable (cached result within TTL).
+        True if Groq API is reachable (cached result within TTL).
     """
     now = time.time()
-    last_check = st.session_state.get("_ollama_health_ts", 0.0)
+    last_check = st.session_state.get("_groq_health_ts", 0.0)
     if now - last_check < _HEALTH_CHECK_CACHE_TTL:
-        return st.session_state.get("_ollama_health", False)
+        return st.session_state.get("_groq_health", False)
     try:
-        healthy = ollama_service.check_health()
-        st.session_state["_ollama_health"] = healthy
-        st.session_state["_ollama_health_ts"] = now
+        healthy = llm_service.check_health()
+        st.session_state["_groq_health"] = healthy
+        st.session_state["_groq_health_ts"] = now
         return healthy
     except Exception as exc:
         logger.warning("_cached_health_check failed: %s", exc)
-        st.session_state["_ollama_health"] = False
-        st.session_state["_ollama_health_ts"] = now
+        st.session_state["_groq_health"] = False
+        st.session_state["_groq_health_ts"] = now
         return False
 
 
@@ -155,18 +155,13 @@ def render_sidebar() -> None:
 
             is_healthy = _cached_health_check()
             if is_healthy:
-                st.success("Ollama connected")
+                st.success("Groq API connected")
             else:
-                st.error("Ollama unreachable")
+                st.error("Groq API unreachable")
 
-            # Build unified model list: preferred first, then any additional installed models
-            preferred = list(settings.OLLAMA_PREFERRED_MODELS)
-            installed = ollama_service.list_models() if is_healthy else []
-            # Add installed models not already in preferred list
-            extra_installed = [m for m in installed if m not in preferred]
-            all_models = preferred + extra_installed
-
-            current_model = st.session_state.get("ollama_model", settings.OLLAMA_DEFAULT_MODEL)
+            # Build model list from settings
+            all_models = llm_service.list_models()
+            current_model = st.session_state.get("groq_model", settings.GROQ_MODEL)
 
             if all_models:
                 # Determine current index for default selection
@@ -179,24 +174,24 @@ def render_sidebar() -> None:
                     "Switch model",
                     all_models,
                     index=current_idx,
-                    help="Preferred models listed first, then all installed models",
+                    help="Select a Groq-hosted model",
                 )
                 if picked and picked != current_model:
-                    st.session_state.ollama_model = picked
-                    ollama_service.set_model(picked)
+                    st.session_state.groq_model = picked
+                    llm_service.set_model(picked)
                     st.rerun()
             else:
                 # Fallback: manual text input if no models available
                 model = st.text_input(
                     "Model name",
                     value=current_model,
-                    help="Enter model name manually (e.g. qwen3:14b)",
+                    help="Enter model name manually (e.g. llama3-70b-8192)",
                 )
                 if model and model != current_model:
-                    st.session_state.ollama_model = model
-                    ollama_service.set_model(model)
+                    st.session_state.groq_model = model
+                    llm_service.set_model(model)
 
-            st.caption(f"Active: **{st.session_state.get('ollama_model', settings.OLLAMA_DEFAULT_MODEL)}**")
+            st.caption(f"Active: **{st.session_state.get('groq_model', settings.GROQ_MODEL)}**")
 
             if st.session_state.get("logged_in"):
                 if st.button("Logout", type="secondary"):

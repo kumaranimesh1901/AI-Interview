@@ -6,7 +6,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from prompts.evaluation_prompts import answer_evaluation_prompt
-from services.ollama_service import OllamaService, ollama_service
+from services.llm_service import LLMService, llm_service
 from utils.helpers import clamp_score, list_to_bullets, parse_json_from_llm
 
 logger = logging.getLogger(__name__)
@@ -35,14 +35,14 @@ def _normalize_to_bullet_string(value: Any) -> str:
 class EvaluationService:
     """Evaluates interview answers and returns structured feedback."""
 
-    def __init__(self, llm: Optional[OllamaService] = None) -> None:
+    def __init__(self, llm: Optional[LLMService] = None) -> None:
         """
         Initialize with optional LLM client.
 
         Args:
-            llm: OllamaService instance (defaults to global singleton).
+            llm: LLMService instance (defaults to global singleton).
         """
-        self.llm = llm or ollama_service
+        self.llm = llm or llm_service
 
     def evaluate_answer(
         self,
@@ -65,7 +65,7 @@ class EvaluationService:
             "strengths": "• Answer submitted for review.",
             "weaknesses": "• Could not complete AI evaluation.",
             "missing_concepts": "• Evaluation unavailable.",
-            "improved_answer": "Please retry when Ollama is available.",
+            "improved_answer": "Please retry when LLM service is available.",
             "follow_up_question": "Can you elaborate on your approach?",
         }
         try:

@@ -161,7 +161,7 @@ try:
                 db,
                 session=session,
                 question_number=q_number,
-                model=st.session_state.get("ollama_model"),
+                model=st.session_state.get("groq_model"),
             )
         if not ok or not current_q:
             st.error(f"Failed to generate question: {msg}")
@@ -192,7 +192,7 @@ try:
                         session=session,
                         question=current_q,
                         answer_text=answer.strip(),
-                        model=st.session_state.get("ollama_model"),
+                        model=st.session_state.get("groq_model"),
                     )
                 if ok:
                     st.session_state.last_evaluation = evaluation

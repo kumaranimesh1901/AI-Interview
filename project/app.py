@@ -67,11 +67,11 @@ with col3:
 
 if st.session_state.get("logged_in"):
     st.success(f"Logged in as **{st.session_state.username}**")
-    st.info("Use the sidebar to switch Ollama models or log out.")
+    st.info("Use the sidebar to switch Groq models or log out.")
 else:
     st.warning("You are not logged in. Please register or login to continue.")
 
 st.divider()
 st.caption(
-    f"Ollama: {settings.OLLAMA_BASE_URL} | Model: {st.session_state.get('ollama_model', settings.OLLAMA_DEFAULT_MODEL)}"
+    f"LLM: Groq API | Model: {st.session_state.get('groq_model', settings.GROQ_MODEL)}"
 )

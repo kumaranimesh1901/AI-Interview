@@ -40,25 +40,32 @@ class Settings:
     PROJECT_ROOT: Path = PROJECT_ROOT
     DATA_DIR: Path = PROJECT_ROOT / "data"
     REPORTS_DIR: Path = PROJECT_ROOT / "data" / "reports"
-    UPLOADS_DIR: Path = PROJECT_ROOT / "data" / "uploads"
 
-    # Database
-    DB_PATH: str = os.getenv(
-        "DB_PATH",
-        str(PROJECT_ROOT / "data" / "interview_prep.db"),
-    )
+    # App
+    APP_NAME: str = os.getenv("APP_NAME", "AI Interview Prep")
+    DEBUG: bool = _get_bool("DEBUG", False)
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "changeme")
 
-    # Ollama
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_DEFAULT_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "qwen3:14b")
-    OLLAMA_PREFERRED_MODELS: list[str] = [
-        m.strip()
-        for m in os.getenv("OLLAMA_PREFERRED_MODELS", "qwen3:14b,qwen3:32b").split(",")
-        if m.strip()
+    # Groq LLM
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+    AVAILABLE_MODELS: list[str] = [
+        "llama3-70b-8192",
+        "llama3-8b-8192",
+        "mixtral-8x7b-32768",
+        "gemma-7b-it",
     ]
-    OLLAMA_TIMEOUT: int = _get_int("OLLAMA_TIMEOUT", 120)
-    OLLAMA_MAX_RETRIES: int = _get_int("OLLAMA_MAX_RETRIES", 3)
-    OLLAMA_RETRY_DELAY: float = float(os.getenv("OLLAMA_RETRY_DELAY", "2.0"))
+
+    # Supabase
+    SUPABASE_DB_URL: str = os.getenv("SUPABASE_DB_URL", "")
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "")
+    CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "")
 
     # Interview
     QUESTIONS_PER_SESSION: int = _get_int("QUESTIONS_PER_SESSION", 10)
@@ -69,17 +76,12 @@ class Settings:
         os.getenv("SCORE_DECREASE_THRESHOLD", "4.0")
     )
 
-    # App
-    DEBUG: bool = _get_bool("DEBUG", False)
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-
     @classmethod
     def ensure_directories(cls) -> None:
         """Create required data directories if they do not exist."""
         try:
             cls.DATA_DIR.mkdir(parents=True, exist_ok=True)
             cls.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-            cls.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
             logging.getLogger(__name__).error(
                 "Failed to create directories: %s", exc

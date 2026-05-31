@@ -1,12 +1,13 @@
-"""SQLAlchemy database engine and session management."""
+"""SQLAlchemy database engine and session management (Supabase PostgreSQL)."""
 
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
@@ -21,29 +22,25 @@ _SessionLocal: sessionmaker[Session] | None = None
 
 
 def get_engine() -> Engine:
-    """Create or return the singleton SQLAlchemy engine."""
+    """Create or return the singleton SQLAlchemy engine for Supabase PostgreSQL."""
     global _engine
     try:
         if _engine is None:
-            settings.ensure_directories()
-            db_url: str = f"sqlite:///{settings.DB_PATH}"
+            db_url: str = settings.SUPABASE_DB_URL
+            if not db_url:
+                raise ValueError(
+                    "SUPABASE_DB_URL not set in environment. "
+                    "Please configure your Supabase database URL."
+                )
             _engine = create_engine(
                 db_url,
-                connect_args={"check_same_thread": False},
+                pool_size=5,
+                max_overflow=10,
+                pool_timeout=30,
+                pool_recycle=1800,
                 echo=settings.DEBUG,
             )
-
-            @event.listens_for(_engine, "connect")
-            def set_sqlite_pragma(dbapi_connection, connection_record) -> None:
-                """Enable foreign keys for SQLite."""
-                try:
-                    cursor = dbapi_connection.cursor()
-                    cursor.execute("PRAGMA foreign_keys=ON")
-                    cursor.close()
-                except Exception as exc:
-                    logger.warning("Could not set SQLite pragma: %s", exc)
-
-            logger.info("Database engine created at %s", settings.DB_PATH)
+            logger.info("Database engine created (Supabase PostgreSQL)")
         return _engine
     except Exception as exc:
         logger.exception("Failed to create database engine: %s", exc)
@@ -75,7 +72,6 @@ def init_db() -> None:
         import models.resume  # noqa: F401
         import models.user  # noqa: F401
 
-        settings.ensure_directories()
         Base.metadata.create_all(bind=get_engine())
         logger.info("Database tables initialized")
     except Exception as exc:
