@@ -1,0 +1,20 @@
+# Ignore python virtual environment
+project/venv/
+
+# Ignore sensitive env file
+project/.env
+
+# Ignore SQLite databases
+project/data/
+**/*.db
+
+# Ignore streamlit secrets
+project/.streamlit/secrets.toml
+
+# Ignore python bytecode
+**/__pycache__/
+**/*.pyc
+
+# Ignore macOS system files
+.DS_Store
+**/.DS_Store
